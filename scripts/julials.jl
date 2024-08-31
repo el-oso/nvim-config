@@ -35,6 +35,7 @@ end
 ls_install_path = joinpath(get(DEPOT_PATH, 1, joinpath(homedir(), ".julia")), "environments", "nvim-lspconfig");
 pushfirst!(LOAD_PATH, ls_install_path);
 using LanguageServer;
+using Revise
 popfirst!(LOAD_PATH);
 @info "LOAD_PATHS: $(Base.load_path())"
 depot_path = get(ENV, "JULIA_DEPOT_PATH", "");
@@ -43,4 +44,5 @@ mkpath(symbol_server_path)
 @info "LanguageServer has started with buffer $project_path or $(pwd())"
 server = LanguageServer.LanguageServerInstance(stdin, stdout, project_path, depot_path, nothing, symbol_server_path, true);
 server.runlinter = true;
+#server.inlay_hints = true;
 run(server);
