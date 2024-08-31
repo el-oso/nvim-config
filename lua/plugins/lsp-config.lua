@@ -17,6 +17,9 @@ return {
   {
     "neovim/nvim-lspconfig",
     lazy = false,
+    opts = {
+      inlay_hints = { enabled = true },
+    },
     config = function()
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
       local config_path = vim.fn.stdpath("config")
@@ -80,6 +83,13 @@ return {
         capabilities = capabilities,
       })
       lspconfig.lua_ls.setup({
+        settings = {
+          Lua = {
+            hint = {
+              enable = true, -- necessary
+            },
+          },
+        },
         capabilities = capabilities,
       })
 
@@ -99,7 +109,10 @@ return {
         capabilities = julia_capabilities,
         settings = {
           julia = {
-            editor = "lvim",
+            hint = {
+              enable = true,
+            },
+            editor = "nvim",
             symbolCacheDownload = true,
             lint = {
               missingrefs = "all",
