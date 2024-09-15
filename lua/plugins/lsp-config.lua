@@ -18,11 +18,11 @@ return {
     "neovim/nvim-lspconfig",
     lazy = false,
     opts = {
-      inlay_hints = { enabled = true },
+      inlay_hint = { enabled = true },
     },
     config = function()
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
-      local config_path = vim.fn.stdpath("config")
+      -- local config_path = vim.fn.stdpath("config")
       local lspconfig = require("lspconfig")
 
       local util = require("lspconfig.util")
@@ -61,7 +61,7 @@ return {
       vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
         local ret = register_capability(err, res, ctx)
         local client_id = ctx.client_id
-        ---@type lsp.Client
+        --@type lsp.Client
         local client = vim.lsp.get_client_by_id(client_id)
         local buffer = vim.api.nvim_get_current_buf()
         require("lazyvim.plugins.lsp.keymaps").on_attach(client, buffer)
@@ -72,7 +72,14 @@ return {
       vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
         virtual_text = false,
         underline = false,
-        signs = true,
+        signs = {
+          text = {
+            [vim.diagnostic.severity.ERROR] = LazyVim.config.icons.diagnostics.Error,
+            [vim.diagnostic.severity.WARN] = LazyVim.config.icons.diagnostics.Warn,
+            [vim.diagnostic.severity.HINT] = LazyVim.config.icons.diagnostics.Hint,
+            [vim.diagnostic.severity.INFO] = LazyVim.config.icons.diagnostics.Info,
+          },
+        },
         update_in_insert = false,
       })
 
