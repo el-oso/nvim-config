@@ -32,6 +32,7 @@ project_path = let
 end
 
 
+Pkg.update()
 ls_install_path = joinpath(get(DEPOT_PATH, 1, joinpath(homedir(), ".julia")), "environments", "nvim-lspconfig");
 pushfirst!(LOAD_PATH, ls_install_path);
 using LanguageServer;

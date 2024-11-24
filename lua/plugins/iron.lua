@@ -34,7 +34,7 @@ return {
                   "julia",
                   "--project=" .. project_dir,
                   "-e",
-                  [[using Revise; enable_autocomplete_brackets(false)]],
+                  [[using Revise; enable_autocomplete_brackets(false); using Pkg; Pkg.resolve()]],
                   "-i",
                 }
               end,
