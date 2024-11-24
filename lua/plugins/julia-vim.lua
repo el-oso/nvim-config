@@ -3,7 +3,7 @@ return {
     "JuliaEditorSupport/julia-vim",
     lazy = false,
   },
-  { "kdheepak/JuliaFormatter.vim" },
+  --[[   { "kdheepak/JuliaFormatter.vim" }, ]]
   {
     "mfussenegger/nvim-dap",
     dependencies = {
@@ -20,5 +20,44 @@ return {
       require("dapui").setup()
       require("nvim-dap-julia").setup()
     end,
+  },
+  {
+    "stevearc/conform.nvim",
+   event = { "BufWritePre" },
+  cmd = { "ConformInfo" },
+  keys = {
+    {
+      -- Customize or remove this keymap to your liking
+      "<leader>cf",
+      function()
+        require("conform").format({ async = true })
+      end,
+      mode = "",
+      desc = "Format buffer",
+    },
+  },
+  -- This will provide type hinting with LuaLS
+  ---@module "conform"
+  ---@type conform.setupOpts
+    opts = {
+    formatters = {
+        runic = {
+            command = "julia",
+            args = {"--startup-file=no", "--project=@runic", "-e", "using Runic; exit(Runic.main(ARGS))"},
+        },
+    },
+    formatters_by_ft = {
+        julia = {"runic"},
+    },
+    default_format_opts = {
+        -- Increase the timeout in case Runic needs to precompile
+        -- (e.g. after upgrading Julia and/or Runic).
+        timeout_ms = 10000,
+    },
+},
+   init = function()
+    -- If you want the formatexpr, here is the place to set it
+    vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
+  end,
   },
 }
