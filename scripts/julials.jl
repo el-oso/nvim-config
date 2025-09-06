@@ -15,20 +15,24 @@ end
 
 buffer_file_path = ARGS[1]
 project_path = let
-    dirname(something(
-        # 1. Check if there is an explicitly set project
-        # 2. Check for Project.toml in current working directory
-        # 3. Check for Project.toml from buffer's full file path exluding the file name
-        # 4. Fallback to global environment
-        Base.load_path_expand((
-            p = get(ENV, "JULIA_PROJECT", nothing);
-            p === nothing ? nothing : isempty(p) ? nothing : p
-        )),
-        Base.current_project(strip(buffer_file_path)),
-        Base.current_project(pwd()),
-        Pkg.Types.Context().env.project_file,
-        Base.active_project()
-    ))
+    dirname(
+        something(
+            # 1. Check if there is an explicitly set project
+            # 2. Check for Project.toml in current working directory
+            # 3. Check for Project.toml from buffer's full file path exluding the file name
+            # 4. Fallback to global environment
+            Base.load_path_expand(
+                (
+                    p = get(ENV, "JULIA_PROJECT", nothing);
+                    p === nothing ? nothing : isempty(p) ? nothing : p
+                )
+            ),
+            Base.current_project(strip(buffer_file_path)),
+            Base.current_project(pwd()),
+            Pkg.Types.Context().env.project_file,
+            Base.active_project()
+        )
+    )
 end
 
 
