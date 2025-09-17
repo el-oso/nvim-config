@@ -25,19 +25,15 @@ return {
     end,
   },
   {
-    "kingavatar/nvchad-ui.nvim",
-    branch = "v2.0",
-    lazy = false,
-    config = function()
-      require("nvchad_ui").setup({
-        lazyVim = true,
-        statusline = { enabled = false },
-        theme_toggle = { "tokyonight", "catppuccin" },
-        nvdash = { load_on_startup = false },
-      })
-
-      -- rename nvchad
-      vim.keymap.set("n", "<leader>cn", require("nvchad_ui.renamer").open, { desc = "nvchad Rename" })
-    end,
+    "bjarneo/lazyvim-cheatsheet.nvim",
+    keys = {
+      {
+        "ch",
+        function()
+          require("lazyvim-cheatsheet").show()
+        end,
+        desc = "Show LazyVim Cheatsheet",
+      },
+    },
   },
 }
