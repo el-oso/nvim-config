@@ -1,89 +1,95 @@
 return {
-	{
-		"nvim-treesitter/nvim-treesitter",
-		build = ":TSUpdate",
-		dependencies = {
-			"nvim-treesitter/playground",
-			"nvim-treesitter/nvim-treesitter-textobjects",
-		},
-		config = function()
-			require("nvim-treesitter.configs").setup({
-				ensure_installed = {
-					"julia",
-					"rust",
-					"make",
-					"lua",
-					"haskell",
-					"c",
-					"python",
-					"zig",
-					"comment",
-					"html",
-					"javascript",
-					"janet_simple",
-					"ini",
-					"toml",
-				},
-				auto_install = true,
-				ignore_install = {},
-				modules = { "julia" },
-				sync_install = true,
-				highlight = {
-					enable = true, -- false will disable the whole extension
-				},
-				playground = {
-					enable = true,
-					disable = {},
-					updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
-					persist_queries = false, -- Whether the query persists across vim sessions
-					keybindings = {
-						toggle_query_editor = "o",
-						toggle_hl_groups = "i",
-						toggle_injected_languages = "t",
-						toggle_anonymous_nodes = "a",
-						toggle_language_display = "I",
-						focus_language = "f",
-						unfocus_language = "F",
-						update = "R",
-						goto_node = "<cr>",
-						show_help = "?",
-					},
-				},
-				query_linter = {
-					enable = true,
-					use_virtual_text = true,
-					lint_events = { "BufWrite", "CursorHold" },
-				},
-				yati = { enable = true },
-				textobjects = {
-					move = {
-						enable = true,
-						set_jumps = true, -- whether to set jumps in the jumplist
-						goto_next_start = {
-							["]]"] = { query = "@*.outer", desc = "Next start outer" },
-							["]s"] = { query = "@scope", query_group = "locals", desc = "Next scope" },
-							["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
-						},
-						goto_next_end = {
-							["[["] = { query = "@*.outer", desc = "Next end outer" },
-						},
-						goto_previous_start = {
-							["]["] = { query = "@*.outer", desc = "Prev start outer" },
-							["[s"] = { query = "@scope", query_group = "locals", desc = "Prev scope" },
-							["[z"] = { query = "@fold", query_group = "folds", desc = "Prev fold" },
-						},
-						goto_previous_end = {
-							["[]"] = { query = "@*.outer", desc = "Prev end outer" },
-						},
-						goto_next = {
-							["]v"] = { query = { "@block*", "@call*" }, desc = "Next block or call" },
-						},
-						goto_previous = {
-							["[v"] = { query = { "@block*", "@call*" }, desc = "Prev block or call" },
-						},
-					},
-				},
-			})
-		end,
-	},
+  "nvim-treesitter/nvim-treesitter",
+  branch = "main",
+  version = false, -- last release is way too old and doesn't work on Windows
+  build = function()
+    local TS = require("nvim-treesitter")
+    if not TS.get_installed then
+      LazyVim.error("Please restart Neovim and run `:TSUpdate` to use the `nvim-treesitter` **main** branch.")
+      return
+    end
+    TS.update(nil, { summary = true })
+  end,
+  lazy = vim.fn.argc(-1) == 0, -- load treesitter early when opening a file from the cmdline
+  event = { "LazyFile", "VeryLazy" },
+  cmd = { "TSUpdate", "TSInstall", "TSLog", "TSUninstall" },
+  opts_extend = { "ensure_installed" },
+  ---@class lazyvim.TSConfig: TSConfig
+  opts = {
+    -- LazyVim config for treesitter
+    ensure_installed = {
+      "bash",
+      "c",
+      "diff",
+      "html",
+      "javascript",
+      "julia",
+      "jsdoc",
+      "json",
+      "jsonc",
+      "lua",
+      "luadoc",
+      "luap",
+      "markdown",
+      "markdown_inline",
+      "printf",
+      "python",
+      "query",
+      "regex",
+      "toml",
+      "tsx",
+      "typescript",
+      "vim",
+      "vimdoc",
+      "xml",
+      "yaml",
+    },
+  },
+  ---@param opts lazyvim.TSConfig
+  config = function(_, opts)
+    local TS = require("nvim-treesitter")
+
+    -- some quick sanity checks
+    if not TS.get_installed then
+      return LazyVim.error("Please use `:Lazy` and update `nvim-treesitter`")
+    elseif vim.fn.executable("tree-sitter") == 0 then
+      return LazyVim.error({
+        "**treesitter-main** requires the `tree-sitter` CLI executable to be installed.",
+        "Run `:checkhealth nvim-treesitter` for more information.",
+      })
+    elseif type(opts.ensure_installed) ~= "table" then
+      return LazyVim.error("`nvim-treesitter` opts.ensure_installed must be a table")
+    end
+
+    -- setup treesitter
+    TS.setup(opts)
+
+    -- install missing parsers
+    local install = vim.tbl_filter(function(lang)
+      return not LazyVim.treesitter.have(lang)
+    end, opts.ensure_installed or {})
+    if #install > 0 then
+      TS.install(install, { summary = true }):await(function()
+        LazyVim.treesitter.get_installed(true) -- refresh the installed langs
+      end)
+    end
+
+    -- treesitter highlighting
+    vim.api.nvim_create_autocmd("FileType", {
+      group = vim.api.nvim_create_augroup("lazyvim_treesitter", { clear = true }),
+      callback = function(ev)
+        if LazyVim.treesitter.have(ev.match) then
+          pcall(vim.treesitter.start)
+
+          -- check if ftplugins changed foldexpr/indentexpr
+          for _, option in ipairs({ "foldexpr", "indentexpr" }) do
+            local expr = "v:lua.LazyVim.treesitter." .. option .. "()"
+            if vim.opt_global[option]:get() == expr then
+              vim.opt_local[option] = expr
+            end
+          end
+        end
+      end,
+    })
+  end,
 }
